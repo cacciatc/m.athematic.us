@@ -1,0 +1,22 @@
+<head>
+  <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX","output/HTML-CSS"],
+      tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]}
+    });
+  </script>
+</head>
+<body>
+  <form name="solve_me" method="post" class="inline" align="center">
+    <fieldset>
+      <legend>enter an equation</legend>
+      <p>
+        <label for="post[expr]">equation:</label>
+        <input type="text" name="post[expr]" id="post[expr]" />
+      </p>
+    </fieldset>
+  </form>
+</body>
