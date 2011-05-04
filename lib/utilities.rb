@@ -1,4 +1,4 @@
-require 'lexer'
+require File.dirname(__FILE__) + '/lexer'
 module FixToFix
   include Lexer
   PRIORITY = {}

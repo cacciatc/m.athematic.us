@@ -1,6 +1,6 @@
-require 'lexer'
-require 'annotator'
-require 'utilities'
+require File.dirname(__FILE__) + '/lexer'
+require File.dirname(__FILE__) + '/annotator'
+require File.dirname(__FILE__) + '/utilities'
 
 module T2Solver
   include Lexer
