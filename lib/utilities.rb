@@ -38,6 +38,7 @@ end
 
 module Implicit
   include Lexer
+  #expects a list in infix
   def self.reveal_the_multiplication(list)
     i = 0
     todo = []
@@ -53,6 +54,29 @@ module Implicit
     i = 0
     todo.each do |t|
       list.insert(t[0]+i,t[1])
+      i += 1
+    end
+    list
+  end
+  #expects a list in infix
+  def self.implicit_the_multiplication(list)
+    i = 0
+    todo = []
+    list.each_slice(2) do |a,b|
+      if b =~ LPAREN and a =~ MULTIPLICATION
+        todo.push(i)
+      end
+      if b =~ VARIABLE and a =~ MULTIPLICATION
+        todo.push(i)
+      end
+      if a =~ VARIABLE and b =~ MULTIPLICATION
+        todo.push(i+1)
+      end
+      i += 2
+    end
+    i = 0
+    todo.each do |t|
+      list.delete_at(t-i)
       i += 1
     end
     list

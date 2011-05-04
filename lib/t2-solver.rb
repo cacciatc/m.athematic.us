@@ -36,7 +36,7 @@ module T2Solver
         when MULTIPLICATION
           @sym = '/'
         when DIVISION
-          @sym = '*' #unless @r.sym =~ VARIABLE
+          @sym = '*'
       end
       self
     end
@@ -131,7 +131,6 @@ module T2Solver
           infix(@root) do |node|
             @s += "#{node}"
           end
-          #parenthesis cleaning
           left,right = @s.split('=')
           if left[0] == '(' and left[-1] == ')'
             left = left[1..-2] 

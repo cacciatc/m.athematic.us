@@ -1,11 +1,11 @@
 require 'rubygems'
-require 'redis'
+#require 'redis'
 require 'sinatra'
 require 't2-solver'
   
 module EarthToRedis
   def self.ask_redis_about(this,redis)
-    redis.get(this)
+    #redis.get(this)
   end
   def self.solve_it!(expression,redis)
     s = T2Solver::Solver.new(expression)
@@ -20,7 +20,8 @@ module EarthToRedis
     str += "</table></div>"
   end
   def self.solve(expression)
-    redis = Redis.new
+    #redis = Redis.new
+    redis = :dummy
     ask_redis_about(expression,redis) || solve_it!(expression,redis)
   end
 end
