@@ -274,6 +274,10 @@ module T2Solver
     def work
       @a.w
     end
+    #tries to combine like terms
+    def combine_like_terms
+      
+    end
     private :fixr!,:isolate,:eval
   end
 end

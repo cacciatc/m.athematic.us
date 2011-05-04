@@ -1,7 +1,7 @@
 require 'rubygems'
 #require 'redis'
 require 'sinatra'
-require 't2-solver'
+require 'lib/t2-solver'
   
 module EarthToRedis
   def self.ask_redis_about(this,redis)
