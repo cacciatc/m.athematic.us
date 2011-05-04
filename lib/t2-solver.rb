@@ -64,7 +64,9 @@ module T2Solver
     include T2Solver
     def initialize(list)
       @root = nil
-      @root,i = parse(FixToFix::infix_to_prefix(list),0)
+      list = Implicit.reveal_the_multiplication(list)
+      list = FixToFix::infix_to_prefix(list)
+      @root,i = parse(list,0)
     end
     def parse(list,i)
       p = list[i]

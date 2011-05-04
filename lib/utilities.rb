@@ -35,3 +35,26 @@ module FixToFix
     prefix.reverse
   end
 end
+
+module Implicit
+  include Lexer
+  def self.reveal_the_multiplication(list)
+    i = 0
+    todo = []
+    list.each_slice(2) do |a,b|
+      if b =~ LPAREN and not a =~ OPERATORS
+        todo.push([i+1,'*'])
+      end
+      if b =~ VARIABLE and a =~ NUMBER
+        todo.push([i+1,'*'])
+      end
+      i += 2
+    end
+    i = 0
+    todo.each do |t|
+      list.insert(t[0]+i,t[1])
+      i += 1
+    end
+    list
+  end
+end
