@@ -145,9 +145,39 @@ module T2Solver
     private :parse,:infix
   end
   
+  class Path
+    attr_accessor :paths,:visited
+    def initialize
+      @paths,@visited = [],[]
+    end
+    def path!(r,node)
+      @paths = []
+      @visited = []
+      while path_to(r,node)
+      end
+    end
+    def path_to(r,node)
+      return p if node == nil
+      if node.sym =~ r and not @visited.include?(node)
+        @paths << node
+        @visited << node
+        return node 
+      end
+      n = path_to(r,node.l) || path_to(r,node.r)
+      @paths << node if n
+      return n
+    end
+    def to_s
+      "#{@paths.join("\n")}"
+    end
+    private :path_to
+  end
+  
   class Solver < ParseTree
+    attr_accessor :p
     def initialize(list)
       @a = Annotator.new
+      @p = Path.new
       super(Lexer.scan!(list))
     end
     #generally we only eval the right, since the left has unknown(s)
@@ -175,20 +205,23 @@ module T2Solver
     end
     #tries to remove everything, but the x on the left
     def isolate
-      @path = []
-      node = path_to(VARIABLE)
-      @path.pop
-      @path.reverse!
+      @p.path!(VARIABLE,@root)
+      if @p.paths.empty?
+        raise "No variable found in the expression."
+      end
+      path = @p.paths
+      path.pop
+      path.reverse!
       
-      if @path.size > 1
+      if path.size > 1
         #swap node that is in the path with the other side of the root
-        @path[0..@path.size-2].each_with_index do |p,i|
+        path[0..path.size-2].each_with_index do |p,i|
           if @root.r == p
             subtree = @root.l
             @root.l = p
-            @root.r = @path[i+1]
-            return if @path[i+1] == nil
-            if p.l == @path[i+1]
+            @root.r = path[i+1]
+            return if path[i+1] == nil
+            if p.l == path[i+1]
               p.l = subtree
             else
               p.r = subtree
@@ -204,9 +237,9 @@ module T2Solver
           else
             subtree = @root.r
             @root.r = p
-            @root.l = @path[i+1]
-            return if @path[i+1] == nil
-            if p.l == @path[i+1]
+            @root.l = path[i+1]
+            return if path[i+1] == nil
+            if p.l == path[i+1]
               p.l = subtree
             else
               p.r = subtree
@@ -226,21 +259,12 @@ module T2Solver
           @a.annotate(to_s(:tex))
         end
       end
-      if @root.r == node
+      if @root.r == (variable_node=@p.visited.first)
         @a.queue_note('transposition')
         @root.r,@root.l = @root.l,@root.r 
       end
     end
-    def path_to(r,node=@root)
-      return p if node == nil
-      if node.sym =~ r
-        @path << node
-        return node 
-      end
-      n = path_to(r,node.l) || path_to(r,node.r)
-      @path << node if n
-      return n
-    end
+    
     #to make sure VARIABLES are always are on the left subtree of its parent node
     #modifying the tree mid-traversal...be there a better way?
     def fixr!(node)
@@ -278,6 +302,9 @@ module T2Solver
     def combine_like_terms
       
     end
+    def path(r,node=@root)
+      @p.path!(r,node)
+    end
     private :fixr!,:isolate,:eval
   end
-end
+endsc
