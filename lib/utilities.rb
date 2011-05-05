@@ -42,7 +42,13 @@ module Implicit
   def self.reveal_the_multiplication(list)
     i = 0
     todo = []
-    list.each_slice(2) do |a,b|
+    while i+1 < list.length
+      a,b = list[i],list[i+1]
+      if a =~ EQUALS or b =~ EQUALS
+        a,b = list[i+1],list[i+2]
+        i += 1
+        next
+      end
       if b =~ LPAREN and not a =~ OPERATORS
         todo.push([i+1,'*'])
       end
@@ -51,6 +57,7 @@ module Implicit
       end
       i += 2
     end
+
     i = 0
     todo.each do |t|
       list.insert(t[0]+i,t[1])

@@ -24,4 +24,10 @@ describe "Solver: Linear" do
   it "should solve this" do
     Solver.new('2(x-1)=-x+4').solve!.should=='2.0'
   end
+  it "should solve this" do
+    Solver.new('2(x-1)=x+4').solve!.should=='6.0'
+  end
+  it "should solve this" do
+    Solver.new('2x+x=100x').solve!.should=='0.0'
+  end
 end

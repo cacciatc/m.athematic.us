@@ -489,12 +489,13 @@ module T2Solver
   end
 end
 
-s = T2Solver::Solver.new('2x+x=100x')
+s = T2Solver::Solver.new('2x+x=100')
+puts s.to_s(:infix)
 #s.solve!
-#s.combine_like_terms!
+s.combine_like_terms!
 puts s.to_s(:infix)
 puts s.work
 
-#s = T2Solver::Solver.new('2x=x')
+#s = T2Solver::Solver.new('2(x-1)=-x+4')
 #s.solve!
 #puts s.work
