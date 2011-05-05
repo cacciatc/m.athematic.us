@@ -64,7 +64,7 @@ module T2Solver
     include T2Solver
     def initialize(list)
       @root = nil
-      list = Implicit.reveal_the_multiplication(list)
+      list = Implicit::reveal_the_multiplication(list)
       list = FixToFix::infix_to_prefix(list)
       @root,i = parse(list,0)
     end
@@ -203,13 +203,7 @@ module T2Solver
         node.proc
       end
     end
-    #tries to remove everything, but the x on the left
-    def isolate
-      @p.path!(VARIABLE,@root)
-      if @p.paths.empty?
-        raise "No variable found in the expression."
-      end
-      path = @p.paths
+    def unravel_to_otherside(path)
       path.pop
       path.reverse!
       
@@ -259,6 +253,16 @@ module T2Solver
           @a.annotate(to_s(:tex))
         end
       end
+    end
+    #tries to remove everything, but the x on the left
+    def isolate
+      @p.path!(VARIABLE,@root)
+      if @p.paths.empty?
+        raise "No variable found in the expression."
+      end
+      path = @p.paths
+      unravel_to_otherside(path)
+      
       if @root.r == (variable_node=@p.visited.first)
         @a.queue_note('transposition')
         @root.r,@root.l = @root.l,@root.r 
@@ -283,8 +287,9 @@ module T2Solver
       fixr!(@root.r)
       @var_found = false
       fixr!(@root.l)
-      
+
       @a.annotate(to_s(:tex),'original problem')
+      combine_like_terms!
       isolate
       reduce!
       
@@ -298,13 +303,198 @@ module T2Solver
     def work
       @a.w
     end
-    #tries to combine like terms
-    def combine_like_terms
-      
+    #a + 0 = a
+    def insert_additive_identity(at_node,a)
+      at_node = Node.new('+')
+      at_node.l = a
+      at_node.r = Node.new('0')
+      at_node
+    end
+    
+    #tries to combine like terms, currently only work for single variable expressions
+    def combine_like_terms!
+      path(VARIABLE)
+      if @p.paths.empty?
+        raise "No variable found in the expression."
+      end
+      #only one variable, so no work to be done
+      if @p.paths.count {|i| i.sym =~ EQUALS} == 1
+        return
+      else
+        var_paths = []
+        var_paths.push([])
+        i = 0
+        @p.paths.each do |p|
+          var_paths[i].push(p)
+          if p.sym =~ EQUALS
+            var_paths.push([])
+            i += 1
+          end
+        end
+        #remove the empty path at the end
+        var_paths.pop
+        
+        #determine if they are combinable
+        var = var_paths.first.first
+        result = var_paths.detect do |p|
+          var != p.first
+        end
+        if not result
+          raise 'Multi-variable equations are currently not supported.'
+        end
+        
+        right,left = [],[]
+        level1 = -2
+        var_paths.each do |p|
+          if p[level1] == @root.r
+            right.push(p)
+          else
+            left.push(p)
+          end
+        end
+        if left.size < right.size
+          #move all variables to the right
+          left.each do |l|
+            #special case where the variable is all alone
+            if l.size == 2
+              equals,variable = l.last,l.first
+              equals.l = insert_additive_identity(equals.l,variable)
+              #swap the operands if need be so that they are applied correctly on the other side
+              equals.l.r,equals.l.l = equals.l.l,equals.l.r if equals.r.sym =~ ADDITION or equals.r.sym =~ MULTIPLICATION
+              l.insert(1,equals.l)
+            end
+            #we want to isolate x's partner instead of x
+            l[0] = l[1].r.sym =~ VARIABLE ? l[1].l : l[1].r
+            unravel_to_otherside(l)
+          end
+        else
+          #move all variables to the left
+          right.each do |r|
+            #special case where the variable is all alone
+            if r.size == 2
+              equals,variable = r.last,r.first
+              equals.r = insert_additive_identity(equals.r,variable)
+              #swap the operands if need be so that they are applied correctly on the other side
+              equals.r.r,equals.r.l = equals.r.l,equals.r.r if equals.r.sym =~ ADDITION or equals.r.sym =~ MULTIPLICATION
+              r.insert(1,equals.r)
+            end
+            #we want to isolate x's partner instead of x
+            r[0] = r[1].r.sym =~ VARIABLE ? r[1].l : r[1].r
+            unravel_to_otherside(r)
+          end
+        end
+        
+        #now finally combine what we can!
+        path(VARIABLE)
+        
+        var_paths = []
+        var_paths.push([])
+        i = 0
+        @p.paths.each do |p|
+          var_paths[i].push(p)
+          if p.sym =~ EQUALS
+            var_paths.push([])
+            i += 1
+          end
+        end
+        #remove the empty path at the end
+        var_paths.pop
+        
+        sum = 0
+        max_coef = 0
+        coefficient_node     = var_paths.first[1]
+        winner_variable_node = var_paths.first.first
+        var_paths.each do |p|
+          coef = calculate_coefficient(p)
+          variable = p.first
+          if coef > max_coef
+            max_coef = coef
+            coefficient_node     = (p[1].l == variable ? p[1].r : p[1].l)
+            winner_variable_node = (p[1].l == variable ? p[1].l : p[1].r)
+          end
+          sum += coef
+        end
+        if sum == 0.0
+          raise "Unsolvable equation.  The variable's coefficient is zero."
+        end
+        #change the variable with the largest coefficient
+        update(coefficient_node,"#{sum}",@root)
+        
+        #remove other variable instances from the tree
+        var_paths.each do |node_in_path|
+          if node_in_path.first != winner_variable_node
+            remove_node(node_in_path.first)
+          end
+        end
+        prune_operations_with_nils!
+        @a.annotate(to_s(:infix),'combine like terms')
+      end
+    end
+    def remove_node(node_to_remove,node=@root)
+      return nil if node.nil? or node.r.nil? or node.l.nil?
+      if node.l == node_to_remove
+        node.l = nil
+        node = node.r
+        return
+      elsif node.r == node_to_remove
+        node.r = nil
+        node = node.l
+        return
+      end
+      remove_node(node_to_remove,node.l)
+      remove_node(node_to_remove,node.r)
+    end
+    def update(node_to_update,new_sym,node)
+      return nil if node.nil?
+      if node_to_update == node
+        node_to_update.sym = new_sym
+      end
+      update(node_to_update,new_sym,node.l)
+      update(node_to_update,new_sym,node.r)
+    end
+    def prune_operations_with_nils!(node=@root,parent=@root)
+      return nil if node.sym =~ IDENTIFIERS or node.nil?
+      if node.l == nil
+        parent.r = node.r
+        node = nil
+        prune_operations_with_nils!(parent.l,parent)
+        prune_operations_with_nils!(parent.r,parent)
+      elsif node.r == nil
+        parent.l = node.l
+        node = nil
+        prune_operations_with_nils!(parent.l,parent)
+        prune_operations_with_nils!(parent.r,parent)
+      else
+        prune_operations_with_nils!(node.l,node)
+        prune_operations_with_nils!(node.r,node)
+      end
+    end
+    def calculate_coefficient(path_to_variable)
+      immediate_operation = path_to_variable[1]
+      variable            = path_to_variable.first
+      if not (immediate_operation.sym =~ MULTIPLICATION) and not (immediate_operation.sym =~ DIVISION)
+        if immediate_operation.sym =~ SUBTRACTION and immediate_operation.r == variable
+          -1.0
+        else
+          1.0
+        end
+      else
+        immediate_operation.r == variable ? immediate_operation.l.sym.to_f : immediate_operation.r.sym.to_f
+      end
     end
     def path(r,node=@root)
       @p.path!(r,node)
     end
     private :fixr!,:isolate,:eval
   end
-endsc
+end
+
+s = T2Solver::Solver.new('2x+x=100x')
+#s.solve!
+#s.combine_like_terms!
+puts s.to_s(:infix)
+puts s.work
+
+#s = T2Solver::Solver.new('2x=x')
+#s.solve!
+#puts s.work
