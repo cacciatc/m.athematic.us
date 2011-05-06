@@ -1,149 +1,12 @@
 require File.dirname(__FILE__) + '/lexer'
 require File.dirname(__FILE__) + '/annotator'
 require File.dirname(__FILE__) + '/utilities'
+require File.dirname(__FILE__) + '/algebra'
+require File.dirname(__FILE__) + '/node'
+require File.dirname(__FILE__) + '/parse-tree'
 
 module T2Solver
   include Lexer
-  
-  class Node
-    include T2Solver
-    attr_accessor :sym,:l,:r
-    def initialize(sym,l=nil,r=nil)
-      @sym,@l,@r = sym,l,r
-    end
-    def proc(*args)
-      case @sym
-        when ADDITION
-          return args[0]+args[1]
-        when SUBTRACTION
-          return args[0]-args[1]
-        when MULTIPLICATION
-          return args[0]*args[1]
-        when DIVISION
-          return args[0]/args[1]
-        when EXPONENTIATION
-          return args[0]**args[1]
-        when NUMBER
-          return @sym.to_f
-      end
-    end
-    def invert!
-      case @sym
-        when ADDITION
-          @sym = '-'
-        when SUBTRACTION
-          @sym = '+'
-        when MULTIPLICATION
-          @sym = '/'
-        when DIVISION
-          @sym = '*'
-      end
-      self
-    end
-    def to_s
-      @sym
-    end
-    def desc
-      case @sym
-        when ADDITION
-          "addition"
-        when SUBTRACTION
-          "subtraction"
-        when MULTIPLICATION
-          "multiplication"
-        when DIVISION
-          "division"
-      end
-    end
-    def details
-      "#{@sym} #{@l} #{@r}"
-    end
-  end
-  
-  class ParseTree
-    include T2Solver
-    def initialize(list)
-      @root = nil
-      list = Implicit::reveal_the_multiplication(list)
-      list = FixToFix::infix_to_prefix(list)
-      @root,i = parse(list,0)
-    end
-    def parse(list,i)
-      p = list[i]
-      x = Node.new(p)
-      if OPERATORS =~ p
-        x.l,i = parse(list,i+1)
-        x.r,i = parse(list,i+1)
-      end
-      return x,i
-    end
-    def count(node=@root)
-      return 0 if node == nil
-      return count(node.l) + count(node.r) + 1
-    end
-    def height(node=@root)
-      return -1 if node == nil
-      u,v = height(node.l),height(node.r)
-      return u > v ? u+1:v+1
-    end
-    def traverse(node=@root,&b)
-      return nil if node == nil
-      yield(node)
-      traverse(node.l,&b)
-      traverse(node.r,&b)
-    end
-    def inorder_traverse(node=@root,&b)
-      return nil if node == nil
-      inorder_traverse(node.l,&b)
-      yield(node)
-      inorder_traverse(node.r,&b)
-    end
-    def infix(node=@root,&b)
-      return nil if node == nil
-      @s += "(" if node.sym =~ OPERATORS and not node.sym =~ EQUALS
-      infix(node.l,&b)
-      yield(node)
-      infix(node.r,&b)
-      @s += ")" if node.sym =~ OPERATORS and not node.sym =~ EQUALS
-    end
-    alias :preorder_traverse :traverse
-    def to_s(fix=:prefix)
-      @s = ""
-      case fix
-        when :prefix
-          preorder_traverse do |node|
-            @s += "#{node} "
-          end
-        when :infix
-          infix(@root) do |node|
-            @s += "#{node}"
-          end
-          #parenthesis cleaning
-          left,right = @s.split('=')
-          if left[0] == '(' and left[-1] == ')'
-            left = left[1..-2] 
-          end
-          if right[0] == '(' and right[-1] == ')'
-            right = right[1..-2] 
-          end
-          @s = "#{left}=#{right}"
-        when :tex
-          infix(@root) do |node|
-            @s += "#{node}"
-          end
-          left,right = @s.split('=')
-          if left[0] == '(' and left[-1] == ')'
-            left = left[1..-2] 
-          end
-          if right[0] == '(' and right[-1] == ')'
-            right = right[1..-2] 
-          end
-          @s = "$#{left}=#{right}$"
-      end
-      @s
-    end
-    private :parse,:infix
-  end
   
   class Path
     attr_accessor :paths,:visited
@@ -303,13 +166,6 @@ module T2Solver
     def work
       @a.w
     end
-    #a + 0 = a
-    def insert_additive_identity(at_node,a)
-      at_node = Node.new('+')
-      at_node.l = a
-      at_node.r = Node.new('0')
-      at_node
-    end
     
     #tries to combine like terms, currently only work for single variable expressions
     def combine_like_terms!
@@ -358,7 +214,7 @@ module T2Solver
             #special case where the variable is all alone
             if l.size == 2
               equals,variable = l.last,l.first
-              equals.l = insert_additive_identity(equals.l,variable)
+              equals.l = Algebraic::additive_identity!(equals.l,variable)
               #swap the operands if need be so that they are applied correctly on the other side
               equals.l.r,equals.l.l = equals.l.l,equals.l.r if equals.r.sym =~ ADDITION or equals.r.sym =~ MULTIPLICATION
               l.insert(1,equals.l)
@@ -373,7 +229,7 @@ module T2Solver
             #special case where the variable is all alone
             if r.size == 2
               equals,variable = r.last,r.first
-              equals.r = insert_additive_identity(equals.r,variable)
+              equals.r = Algebraic::additive_identity!(equals.r,variable)
               #swap the operands if need be so that they are applied correctly on the other side
               equals.r.r,equals.r.l = equals.r.l,equals.r.r if equals.r.sym =~ ADDITION or equals.r.sym =~ MULTIPLICATION
               r.insert(1,equals.r)
@@ -400,10 +256,11 @@ module T2Solver
         #remove the empty path at the end
         var_paths.pop
         
-        sum = 0
+        sum = 0.0
         max_coef = 0
         coefficient_node     = var_paths.first[1]
         winner_variable_node = var_paths.first.first
+        
         var_paths.each do |p|
           coef = calculate_coefficient(p)
           variable = p.first
@@ -489,7 +346,7 @@ module T2Solver
   end
 end
 
-s = T2Solver::Solver.new('2x+x=100')
+s = T2Solver::Solver.new('x=2x')
 puts s.to_s(:infix)
 #s.solve!
 s.combine_like_terms!
