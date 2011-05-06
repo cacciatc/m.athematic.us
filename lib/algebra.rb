@@ -4,67 +4,89 @@ require File.dirname(__FILE__) + '/parse-tree'
 
 module Algebraic
   include Lexer
-  def self.complete_family?(node)
-    if node.nil? or node.l.nil? or node.r.nil?
+  def self.complete_family?(operation_node)
+    if operation_node.nil? or operation_node.l.nil? or operation_node.r.nil?
       false
     else
       true
     end
   end
-  def self.distribute!(node)
-    return if not complete_family?(node) or not node.sym =~ MULTIPLICATON
-    if ParseTree::height(node.r) > ParseTree::height(node.l) 
+  def self.distribute!(operation_node)
+    return operation_node if not complete_family?(operation_node) or not operation_node.sym =~ MULTIPLICATON
+    if ParseTree::height(operation_node.r) > ParseTree::height(operation_node.l) 
       #(b+c)a
-      return if not complete_family?(node.l) or node.l.sym =~ ADDITION or node.l.sym =~ SUBTRACTION
-      a,b,c = node.r,node.l.l,node.l.r
+      return operation_node if not complete_family?(operation_node.l) or operation_node.l.sym =~ ADDITION or operation_node.l.sym =~ SUBTRACTION
+      a,b,c = operation_node.r,operation_node.l.l,operation_node.l.r
       b_x_a = Node.new('*',b,a)
       c_x_a = Node.new('*',c,a)
-      node.sym = Node.new('+',b_x_a,c_x_a)
+      operation_node.sym = Node.new('+',b_x_a,c_x_a)
     else
       #a(b+c)
-      return if not complete_family?(node.r) or node.l.sym =~ ADDITION or node.l.sym =~ SUBTRACTION
-      a,b,c = node.l,node.r.l,node.r.r
+      return operation_node if not complete_family?(operation_node.r) or operation_node.l.sym =~ ADDITION or operation_node.l.sym =~ SUBTRACTION
+      a,b,c = operation_node.l,operation_node.r.l,operation_node.r.r
       a_x_b = Node.new('*',a,b)
       a_x_c = Node.new('*',a,c)
-      node.sym = Node.new('+',a_x_b,a_x_c)
+      operation_node.sym = Node.new('+',a_x_b,a_x_c)
     end
-    node
+    operation_node
   end
-  def self.distributive?(node)
-    return false if not complete_family?(node) or not node.sym =~ ADDITION
-    return false if not complete_family?(node.r) or not complete_family?(node.l)
-    return false if not node.r.sym =~ MULTIPLCIATION or not node.r.sym =~ MULTIPLICATION
+  def self.distributive?(operation_node)
+    return false if not complete_family?(operation_node) or not operation_node.sym =~ ADDITION
+    return false if not complete_family?(operation_node.r) or not complete_family?(operation_node.l)
+    return false if not operation_node.r.sym =~ MULTIPLCIATION or not operation_node.r.sym =~ MULTIPLICATION
     #ab + cd
-    a,b,c,d = node.l.l,node.l.r,node.r.l,node.r.r
-    return false if a.sym != c.sym or b.sym != d.ym
+    a,b,c,d = operation_node.l.l,operation_node.l.r,operation_node.r.l,operation_node.r.r
+    return false if a.sym != c.sym or b.sym != d.sym
     true
   end
-  def self.additive_identity!(node,subtree)
-    node = Node.new('+')
-    node.l = subtree
-    node.r = Node.new('0')
-    node
+  def self.additive_identity!(identifier_node,subtree)
+    identifier_node = Node.new('+')
+    identifier_node.l = subtree
+    identifier_node.r = Node.new('0')
+    identifier_node
   end
-  def self.additive_identity?(node)
-    return false if not complete_family?(node)
-    if node.sym =~ ADDITION and (node.l.smy == '0' or node.r.sym == '0')
+  def self.additive_identity?(operation_node)
+    return false if not complete_family?(operation_node)
+    if operation_node.sym =~ ADDITION and (operation_node.l.sym == '0' or operation_node.r.sym == '0')
       true
     else
       false
     end
   end
-  def self.multiplicative_identity!(node,subtree)
-    node = Node.new('*')
-    node.l = subtree
-    node.r = Node.new('1')
-    node
+  def self.multiplicative_identity!(identifier_node,subtree)
+    identifier_node = Node.new('*')
+    identifier_node.l = subtree
+    identifier_node.r = Node.new('1')
+    identifier_node
   end
-  def self.multiplicative_identity?(node,subtree)
-    return false if not complete_family?(node)
-    if node.sym =~ MULTIPLICATION and (node.l.smy == '1' or node.r.sym == '1')
+  def self.multiplicative_identity?(operation_node,subtree)
+    return false if not complete_family?(operation_node)
+    if operation_node.sym =~ MULTIPLICATION and (operation_node.l.sym == '1' or operation_node.r.sym == '1')
       true
     else
       false
     end
+  end
+  def self.over_one(identifier_node)
+    return identifier_node if identifier_node.nil?
+    #a = a/1
+    identifier_node = Node.new('/',identifier_node,Node.new('1'))
+    identifier_node
+  end
+  def self.cross_multiply(equals_node)
+    return equals_node if equals_node.nil? or not equals_node.sym =~ EQUALS
+    return equals_node if not complete_family?(equals_node)
+    
+    #a/b = c/d => ad = bc
+    if not equals_node.r.sym =~ DIVISION
+      equals_node.r = over_one(equals_node.r)
+    end
+    if not equals_node.l.sym =~ DIVISION
+      equals_node.l = over_one(equals_node.l)
+    end
+    a,b,c,d = equals_node.l.l,equals_node.l.r,equals_node.r.l,equals_node.r.r
+    equals_node.l = Node.new('*',a,d)
+    equals_node.r = Node.new('*',b,c)
+    equals_node
   end
 end

@@ -1,7 +1,9 @@
 require File.dirname(__FILE__) + '/lexer'
+require File.dirname(__FILE__) + '/utilities'
 
 class ParseTree
   include Lexer
+  attr_accessor :root
   def initialize(list)
     @root = nil
     list = Implicit::reveal_the_multiplication(list)
@@ -38,6 +40,9 @@ class ParseTree
     traverse(node.r,&b)
   end
   def inorder_traverse(node=@root,&b)
+    self.inorder_traverse(node,&b)
+  end
+  def self.inorder_traverse(node,&b)
     return nil if node == nil
     inorder_traverse(node.l,&b)
     yield(node)
