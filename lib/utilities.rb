@@ -8,7 +8,7 @@ module FixToFix
   PRIORITY['-'] = 2
   PRIORITY['*'] = 3
   PRIORITY['/'] = 3
-  PRIORITY['^'] = 3
+  PRIORITY['^'] = 4
 
   def self.infix_to_prefix(list)
     prefix,s  = [],[]
@@ -34,6 +34,33 @@ module FixToFix
       prefix.push(s.pop)
     end
     prefix.reverse
+  end
+end
+
+module NegativeFun
+  include Lexer
+  #expects a list in infix
+  def self.massage_negative_numbers(list)
+    return list if list.size < 2
+    list.each_with_index do |t,i|
+      if t == '-'
+        if i == 0 or list[i-1] =~ OPERATORS or list[i-1] == '('
+          raise "This expression has a dangling minus sign #{list[0..i].join(" ")}" if list.size < i+1
+          #negative number!
+          case list[i+1]
+            when NUMBER
+              list[i] = nil
+              list[i+1] = (list[i+1].to_f*-1).to_s
+            when /\(/
+              list[i] = (-1.0).to_s
+            when VARIABLE
+              list[i] = (-1.0).to_s
+          end
+        end
+      end
+    end
+    list.delete_if {|l| l.nil?}
+    list
   end
 end
 

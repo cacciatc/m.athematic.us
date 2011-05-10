@@ -27,6 +27,6 @@ module Lexer
   
   LANG = Regexp.union(IDENTIFIERS,OPERATORS,FUNCTIONS)
   def self.scan!(expr)
-    expr.scan(LANG)
+    expr.scan(LANG) 
   end
 end

@@ -41,7 +41,7 @@ module T2Solver
     def initialize(list)
       @a = Annotator.new
       @p = Path.new
-      super(Lexer.scan!(list))
+      super(list)
     end
     #generally we only eval the right, since the left has unknown(s)
     def eval(node=@root.r)
@@ -165,6 +165,9 @@ module T2Solver
     end
     def work
       @a.w
+    end
+    def answer
+      @a.w.last[:expr]
     end
     
     #tries to combine like terms, currently only work for single variable expressions
@@ -342,17 +345,10 @@ module T2Solver
     def path(r,node=@root)
       @p.path!(r,node)
     end
+    def simplify!
+    end
+    def factor!
+    end
     private :fixr!,:isolate,:eval
   end
 end
-
-s = T2Solver::Solver.new('x=2x')
-puts s.to_s(:infix)
-#s.solve!
-s.combine_like_terms!
-puts s.to_s(:infix)
-puts s.work
-
-#s = T2Solver::Solver.new('2(x-1)=-x+4')
-#s.solve!
-#puts s.work

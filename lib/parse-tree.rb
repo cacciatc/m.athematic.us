@@ -6,9 +6,10 @@ class ParseTree
   include Lexer
   attr_accessor :root
   def initialize(list)
-    list = Implicit::reveal_the_multiplication(list)
-    list = FixToFix::infix_to_prefix(list)
-    @root,i = parse(list,0)
+    infix_list = Implicit::reveal_the_multiplication(list)
+    infix_list = NegativeFun::massage_negative_numbers(infix_list)
+    prefix_list = FixToFix::infix_to_prefix(infix_list)
+    @root,i = parse(prefix_list,0)
   end
   
   #convenience parse
