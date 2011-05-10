@@ -8,6 +8,7 @@ module FixToFix
   PRIORITY['-'] = 2
   PRIORITY['*'] = 3
   PRIORITY['/'] = 3
+  PRIORITY['^'] = 3
 
   def self.infix_to_prefix(list)
     prefix,s  = [],[]

@@ -1,53 +1,82 @@
 require File.dirname(__FILE__) + '/lexer'
 require File.dirname(__FILE__) + '/utilities'
+require File.dirname(__FILE__) + '/node'
 
 class ParseTree
   include Lexer
   attr_accessor :root
   def initialize(list)
-    @root = nil
     list = Implicit::reveal_the_multiplication(list)
     list = FixToFix::infix_to_prefix(list)
     @root,i = parse(list,0)
   end
+  
+  #convenience parse
   def parse(list,i)
+    ParseTree.parse(list,i)
+  end
+  
+  #parses a list of tokens and returns the root of a tree
+  def self.parse(list,i)
     p = list[i]
     x = Node.new(p)
     if OPERATORS =~ p
-      x.l,i = parse(list,i+1)
-      x.r,i = parse(list,i+1)
+      x.l,i = ParseTree.parse(list,i+1)
+      x.r,i = ParseTree.parse(list,i+1)
     end
     return x,i
   end
+  
+  #convenience count
   def count(node=@root)
-    return 0 if node == nil
-    return count(node.l) + count(node.r) + 1
+    ParseTree.count(node)
   end
   
-  def height(node=@root)
-    self.height(node)
+  #counts the number of nodes in a tree, starting at node
+  def self.count(node)
+    return 0 if node == nil
+    return ParseTree.count(node.l) + ParseTree.count(node.r) + 1
   end
+  
+  #convenience height
+  def height(node=@root)
+    ParseTree.height(node)
+  end
+  
+  #returns the height of a tree, starting at node
   def self.height(node)
     return -1 if node == nil
-    u,v = height(node.l),height(node.r)
+    u,v = ParseTree.height(node.l),ParseTree.height(node.r)
     return u > v ? u+1:v+1
   end
   
+  #convenience traverse
   def traverse(node=@root,&b)
+    ParseTree.traverse(node,&b)
+  end
+  
+  #traverses a tree starting at node and yielding b upon visiting
+  def self.traverse(node,&b)
     return nil if node == nil
     yield(node)
-    traverse(node.l,&b)
-    traverse(node.r,&b)
+    ParseTree.traverse(node.l,&b)
+    ParseTree.traverse(node.r,&b)
   end
+  
+  #convenience in order traversal
   def inorder_traverse(node=@root,&b)
-    self.inorder_traverse(node,&b)
+    ParseTree.inorder_traverse(node,&b)
   end
+  
+  #in order traversal of a tree starting at node and yielding b upon visiting
   def self.inorder_traverse(node,&b)
     return nil if node == nil
-    inorder_traverse(node.l,&b)
+    ParseTree.inorder_traverse(node.l,&b)
     yield(node)
-    inorder_traverse(node.r,&b)
+    ParseTree.inorder_traverse(node.r,&b)
   end
+  
+  #hackish way to get infix pretty print, this will eventually be punted out to another module
   def infix(node=@root,&b)
     return nil if node == nil
     @s += "(" if node.sym =~ OPERATORS and not node.sym =~ EQUALS
@@ -56,7 +85,10 @@ class ParseTree
     infix(node.r,&b)
     @s += ")" if node.sym =~ OPERATORS and not node.sym =~ EQUALS
   end
+  
   alias :preorder_traverse :traverse
+  
+  #like infix above it, this logic will eventually move out to a pretty print class!
   def to_s(fix=:prefix)
     @s = ""
     case fix
@@ -64,6 +96,7 @@ class ParseTree
         preorder_traverse do |node|
           @s += "#{node} "
         end
+        @s.chop!
       when :infix
         infix(@root) do |node|
           @s += "#{node}"
@@ -92,5 +125,4 @@ class ParseTree
     end
     @s
   end
-  private :parse,:infix
 end
