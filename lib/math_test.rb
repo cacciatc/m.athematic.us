@@ -1,15 +1,14 @@
 require 'rubygems'
 #require 'redis'
 require 'sinatra'
-require File.dirname(__FILE__) + '/t2-solver.rb'
+require File.dirname(__FILE__) + '/mr-proxy'
   
 module EarthToRedis
   def self.ask_redis_about(this,redis)
     #redis.get(this)
   end
   def self.solve_it!(expression,redis)
-    s = T2Solver::Solver.new(expression)
-    s.solve!
+    s = MrProxy.what_should_i_do(expression).well_do_it!
     str = "<div class=\"answer\"> <h1 align=\"center\">#{s.work.last[:expr]}</h1></div><div class=\"work\" align=\"center\"><table cellpadding=\"10\">"
     str = s.work.inject(str) do |s,e|
       s += "<tr>
