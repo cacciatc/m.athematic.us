@@ -1,4 +1,5 @@
 require File.dirname(__FILE__) + '/../lib/parse-tree'
+require File.dirname(__FILE__) + '/../lib/lexer'
 require 'rspec'
 
 describe ParseTree do
@@ -16,5 +17,8 @@ describe ParseTree do
   end
   it "should be able to represent equations" do
     ParseTree.new(['x','^','2','+','2','=','4']).to_s.should == '= + ^ x 2 2 4'
+  end
+  it "should be able to parse 10x-(2x+(13-4x)-(11-3x))+(2x+5) (issue 34)" do
+    ParseTree.new(Lexer.scan!('10x-(2x+(13-4x)-(11-3x))+(2x+5)')).to_s.should == '+ - * 10 x - + * 2 x - 13 * 4 x - 11 * 3 x + * 2 x 5'
   end
 end

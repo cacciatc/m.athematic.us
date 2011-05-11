@@ -105,25 +105,33 @@ class ParseTree
         end
         #parenthesis cleaning
         left,right = @s.split('=')
-        if left[0] == '(' and left[-1] == ')'
-          left = left[1..-2] 
+        if not left.nil?
+          if left[0] == '(' and left[-1] == ')'
+            left = left[1..-2] 
+          end
         end
-        if right[0] == '(' and right[-1] == ')'
-          right = right[1..-2] 
+        if not right.nil?
+          if right[0] == '(' and right[-1] == ')'
+            right = right[1..-2] 
+          end
         end
-        @s = "#{left}=#{right}"
+        @s = "#{left}#{left.nil? or right.nil? ? '' : '='}#{right}"
       when :tex
         infix(@root) do |node|
           @s += "#{node}"
         end
         left,right = @s.split('=')
-        if left[0] == '(' and left[-1] == ')'
-          left = left[1..-2] 
+        if not left.nil?
+          if left[0] == '(' and left[-1] == ')'
+            left = left[1..-2] 
+          end
         end
-        if right[0] == '(' and right[-1] == ')'
-          right = right[1..-2] 
+        if not right.nil?
+          if right[0] == '(' and right[-1] == ')'
+            right = right[1..-2] 
+          end
         end
-        @s = "$#{left}=#{right}$"
+        @s = "$#{left}#{left.nil? or right.nil? ? '' : '='}#{right}$"
     end
     @s
   end

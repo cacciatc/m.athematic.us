@@ -54,7 +54,9 @@ module NegativeFun
               list[i] = nil
               list[i+1] = (list[i+1].to_f*-1).to_s
             when /\(/
-              list[i] = (-1.0).to_s
+              if i-1 >= 0 and not list[i-1] =~ OPERATORS or list[i-1] =~ EQUALS
+                list[i] = (-1.0).to_s
+              end
             when VARIABLE
               list[i] = (-1.0).to_s
           end
@@ -85,7 +87,7 @@ module Implicit
       if b =~ VARIABLE and a =~ REAL_NUMBER
         todo.push([i+1,'*'])
       end
-      i += 2
+      i += 1
     end
 
     i = 0
