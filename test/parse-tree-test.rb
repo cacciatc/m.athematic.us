@@ -21,4 +21,7 @@ describe ParseTree do
   it "should be able to parse 10x-(2x+(13-4x)-(11-3x))+(2x+5) (issue 34)" do
     ParseTree.new(Lexer.scan!('10x-(2x+(13-4x)-(11-3x))+(2x+5)')).to_s.should == '+ - * 10 x - + * 2 x - 13 * 4 x - 11 * 3 x + * 2 x 5'
   end
+  it "should be able to parse -(10[x+1]-(4x)) (issue 32)" do
+    ParseTree.new(Lexer.scan!('-(10[x+1]-(4x))')).to_s.should == '* -1.0 - * 10 + x 1 * 4 x'
+  end
 end

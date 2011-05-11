@@ -28,6 +28,8 @@ module Lexer
   
   LANG = Regexp.union(IDENTIFIERS,OPERATORS,FUNCTIONS)
   def self.scan!(expr)
+    expr.gsub!(/\]/,')')
+    expr.gsub!(/\[/,'(')
     expr.scan(LANG) 
   end
 end
