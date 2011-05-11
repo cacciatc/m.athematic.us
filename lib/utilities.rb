@@ -54,7 +54,10 @@ module NegativeFun
               list[i] = nil
               list[i+1] = (list[i+1].to_f*-1).to_s
             when /\(/
-              if i-1 >= 0 and not list[i-1] =~ OPERATORS or list[i-1] =~ EQUALS
+              if i == 0
+                list[i] = (-1.0).to_s
+              end
+              if i-1 > 0 and not list[i-1] =~ OPERATORS or list[i-1] =~ EQUALS
                 list[i] = (-1.0).to_s
               end
             when VARIABLE
