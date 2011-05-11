@@ -50,4 +50,8 @@ describe "Solver: Linear" do
     this = MrProxy.what_should_i_do('-(x+5)=100')
     this.well_do_it!.answer.should == '$x=-105.0$'
   end
+  it "should solve x=2x (issue 29)" do
+    this = MrProxy.what_should_i_do('x=2x')
+    this.well_do_it!.answer.should == '$x=-0.0$'
+  end
 end
