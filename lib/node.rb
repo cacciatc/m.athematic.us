@@ -1,10 +1,30 @@
-require File.dirname(__FILE__) + '/lexer'
-
 class Node
-  include Lexer
+  #nodes have to use slightly different operator regex's
+  INTEGER = /(\-|\+|)([0-9]+|[0-9]+\.[0-9]+)/
+  REAL    = /[0-9]+\.[0-9]+/
+  NUMBER  = Regexp.union(REAL,INTEGER)  
+  
+  EQUALS      = /\=/
+  ADDITION    = /^\+$/
+  SUBTRACTION = /^\-$/
+  MULTIPLICATION = /\*/
+  DIVISION       = /\//
+  EXPONENTIATION = /\^/
+
+  OPERATORS = Regexp.union(
+    EQUALS,ADDITION,SUBTRACTION,DIVISION,MULTIPLICATION,
+    EXPONENTIATION
+  )
+  
   attr_accessor :sym,:l,:r
   def initialize(sym,l=nil,r=nil)
     @sym,@l,@r = sym,l,r
+  end
+  def self.operator?(sym)
+    sym =~ OPERATORS
+  end
+  def operator?
+    Node.operator?(@sym)
   end
   def proc(*args)
     case @sym

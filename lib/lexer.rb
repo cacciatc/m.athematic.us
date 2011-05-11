@@ -1,4 +1,5 @@
 module Lexer
+  REAL_NUMBER = /(\-|\+|)([0-9]+|[0-9]+\.[0-9]+)/
   INTEGER = /[0-9]+/
   REAL    = /[0-9]+\.[0-9]+/
   NUMBER  = Regexp.union(REAL,INTEGER)

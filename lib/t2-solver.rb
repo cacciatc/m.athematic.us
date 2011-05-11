@@ -46,7 +46,7 @@ module T2Solver
     #generally we only eval the right, since the left has unknown(s)
     def eval(node=@root.r)
       return nil if node == nil
-      if OPERATORS =~ node.sym
+      if node.operator?
         node.proc(eval(node.l),eval(node.r))
       else
         node.proc
@@ -54,7 +54,7 @@ module T2Solver
     end
     def reduce!(node=@root.r)
       return nil if node == nil
-      if OPERATORS =~ node.sym
+      if node.operator?
         a,b = reduce!(node.l),reduce!(node.r)
         @a.annotate(to_s(:tex))
         @a.queue_note(node.desc)

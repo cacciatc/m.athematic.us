@@ -21,6 +21,8 @@ module FixToFix
             prefix.push(s.pop)
           end
           s.pop
+        when REAL_NUMBER
+          prefix.push(i)
         when OPERATORS
           while PRIORITY[s.last] > PRIORITY[i]
             prefix.push(s.pop)
@@ -77,10 +79,10 @@ module Implicit
         i += 1
         next
       end
-      if b =~ LPAREN and not a =~ OPERATORS
+      if b =~ LPAREN and a =~ REAL_NUMBER
         todo.push([i+1,'*'])
       end
-      if b =~ VARIABLE and a =~ NUMBER
+      if b =~ VARIABLE and a =~ REAL_NUMBER
         todo.push([i+1,'*'])
       end
       i += 2

@@ -6,8 +6,9 @@ class ParseTree
   include Lexer
   attr_accessor :root
   def initialize(list)
-    infix_list = Implicit::reveal_the_multiplication(list)
-    infix_list = NegativeFun::massage_negative_numbers(infix_list)
+    #message needs to happen before reveal!
+    infix_list = NegativeFun::massage_negative_numbers(list)
+    infix_list = Implicit::reveal_the_multiplication(infix_list)
     prefix_list = FixToFix::infix_to_prefix(infix_list)
     @root,i = parse(prefix_list,0)
   end
@@ -21,7 +22,7 @@ class ParseTree
   def self.parse(list,i)
     p = list[i]
     x = Node.new(p)
-    if OPERATORS =~ p
+    if Node.operator?(p)
       x.l,i = ParseTree.parse(list,i+1)
       x.r,i = ParseTree.parse(list,i+1)
     end
@@ -80,11 +81,11 @@ class ParseTree
   #hackish way to get infix pretty print, this will eventually be punted out to another module
   def infix(node=@root,&b)
     return nil if node == nil
-    @s += "(" if node.sym =~ OPERATORS and not node.sym =~ EQUALS
+    @s += "(" if node.operator? and not node.sym =~ EQUALS
     infix(node.l,&b)
     yield(node)
     infix(node.r,&b)
-    @s += ")" if node.sym =~ OPERATORS and not node.sym =~ EQUALS
+    @s += ")" if node.operator?  and not node.sym =~ EQUALS
   end
   
   alias :preorder_traverse :traverse

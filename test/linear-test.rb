@@ -38,4 +38,16 @@ describe "Solver: Linear" do
     this = MrProxy.what_should_i_do('2x+x=100x')
     this.well_do_it!.answer.should == '$x=0.0$'
   end
+  it "should solve -12+x=100 (issue 23)" do
+    this = MrProxy.what_should_i_do('-12+x=100')
+    this.well_do_it!.answer.should == '$x=112.0$'
+  end
+  it "should solve -x=100 (issue 23)" do
+    this = MrProxy.what_should_i_do('-x=100')
+    this.well_do_it!.answer.should == '$x=-100.0$'
+  end
+  it "should solve -(x+5)=100 (issue 23)" do
+    this = MrProxy.what_should_i_do('-(x+5)=100')
+    this.well_do_it!.answer.should == '$x=-105.0$'
+  end
 end
