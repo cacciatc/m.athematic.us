@@ -1,20 +1,87 @@
+#header-container{
+	float: top;
+	width: 100%;
+	/*background: #075385 url(images/background-header.jpg) repeat-x 0 100%;*/
+	/*border-bottom: 1px solid #cae298;*/
+	/*background-color:#078C03;*/
+}
+    
+.home #header-container { 
+	/*border-bottom: 1px solid #609dbc; */
+}
+    
+#header{
+	width: 100%;
+}
+    
+#header2{
+	/*float: left;*/
+	width: 100%;
+	/*background: url(images/background-header2.jpg) no-repeat 0 100%;*/
 
+}
+
+body{
+	/*background-image:url('../media/graph2.png');
+	background-repeat:repeat-y;
+	background-position: center;*/
+	/*	background: -webkit-gradient(linear, left bottom, left top, from(#078C03), to(#FFFFFF));
+	background: -moz-linear-gradient(top,  #078C03,  #FFFFFF);
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#078C03', endColorstr='#FFFFFF');*/
+	font-color:#0A0A0A;
+}
 div.answer{
-	font-size:300%;
-	background-color: Gold;
+	font-size:200%;
+	font-color:#0A0A0A;
+	background-color: #F2BB07;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
 	-moz-box-shadow: 5px 5px 5px black;
 	-webkit-box-shadow: 5px 5px 5px black;
 	box-shadow: 5px 5px 5px black;
+		margin-left:auto;
+	margin-right:auto;
+	width:50%;
 }
 
 div.work{
-	font-size:200%;
-	background-color: CornflowerBlue;
+	font-size:100%;
+	font-color:#0A0A0A;
+	background-color: #0477BF;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
 	-moz-box-shadow: 5px 5px 5px black;
 	-webkit-box-shadow: 5px 5px 5px black;
 	box-shadow: 5px 5px 5px black;
+		margin-left:auto;
+	margin-right:auto;
+	width:50%;
+}
+
+.ribbon {
+  background-color:#F22233;
+  overflow: hidden;
+  /* top left corner */
+  position: absolute;
+  left: -3em;
+  bottom: 2.5em;
+  
+  /* 45 deg ccw rotation */
+  -moz-transform: rotate(45deg);
+  -webkit-transform: rotate(45deg);
+  /* shadow */
+  -moz-box-shadow: 0 0 1em #888;
+  -webkit-box-shadow: 0 0 1em #888;
+}
+.ribbon a {
+  border: 1px solid #faa;
+  color: #fff;
+  display: block;
+  font: bold 81.25% 'Helvetiva Neue', Helvetica, Arial, sans-serif;
+  margin: 0.05em 0 0.075em 0;
+  padding: 0.5em 3.5em;
+  text-align: center;
+  text-decoration: none;
+  /* shadow */
+  text-shadow: 0 0 0.5em #444;
 }
